@@ -1,7 +1,9 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(~0);
 //Putting my error message in constant variable
 define('ERROR_MESSAGE', 'This Field is required');
-//Error Message
+//Error variable store in an array
 $errorMsg = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //accepting data from user
@@ -34,11 +36,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errorMsg['cpassword'] = 'Does not match with password';
     }
 
-    //saving the collected form data to file
+    //saving the collected form data to file if no errors was found
     if (empty($errorMsg)) {
-        echo "<pre>";
-        var_dump($_POST);
-        echo "</pre>";
+        //using md5 hashing as an identifier
+        $id = md5($_POST['email'] . $_POST['password']);
+        //writing the file into file databse
+        $file = file_get_contents('file.txt');
+        //pasing the file to json to decode
+        $file = json_decode($file, true);
+        //if file is not empty, store the file like jscon format so that i can use it for login
+        if (empty($file)) {
+            $new = array($id => array('email' => $email, 'password' => $password));
+            $db = json_encode($new, JSON_FORCE_OBJECT);
+        } elseif (is_array($file)) {
+            $new = array('email' => $email, 'password' => $password);
+            $file["$id"] = $new;
+            $db = json_encode($file, JSON_FORCE_OBJECT);
+        }
+        $filename = 'file.txt';
+        $fp = fopen($filename, 'w');
+        fwrite($fp, $db);
+
+        echo "<div class='alert alert-success' role='alert'>Registration sucessfull</div>";
     }
 
 }
