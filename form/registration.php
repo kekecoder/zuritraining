@@ -7,6 +7,7 @@ define('ERROR_MESSAGE', 'This Field is required');
 $errorMsg = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //accepting data from user
+    session_start();
     $firstname = formData('firstname');
     $lastname = formData('lastname');
     $username = formdata('username');
@@ -44,15 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $file = file_get_contents('file.txt');
         //pasing the file to json to decode
         $file = json_decode($file, true);
-        //if file is not empty, store the file like jscon format so that i can use it for login
-        if (empty($file)) {
-            $new = array($id => array('email' => $email, 'password' => $password));
-            $db = json_encode($new, JSON_FORCE_OBJECT);
-        } elseif (is_array($file)) {
-            $new = array('email' => $email, 'password' => $password);
-            $file["$id"] = $new;
-            $db = json_encode($file, JSON_FORCE_OBJECT);
-        }
+        //if file is not empty, store the file like json format so that i can use it for login
+        $new = array($id => array('email' => $email, 'password' => $password));
+        $db = json_encode($new, JSON_FORCE_OBJECT);
         $filename = 'file.txt';
         $fp = fopen($filename, 'w');
         fwrite($fp, $db);

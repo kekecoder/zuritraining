@@ -7,11 +7,14 @@ error_reporting(~0);
 define('ERROR_MESSAGE', 'This Field is required');
 //Error variable store in an array
 $errorMsg = [];
-
+$_SESSION = [];
+$email = '';
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
+    session_start();
+    //using the function created to remove all form of malicious tags and script
     $email = formData('email');
     $password = formData('password');
-
+//validing email and password if it does not exist
     if (!$email) {
         $errorMsg['email'] = ERROR_MESSAGE;
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -20,13 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     if (!$password) {
         $errorMsg['password'] = ERROR_MESSAGE;
     }
-    $id = md5($_POST['email'] . $_POST['password']);
-    $file = file_get_contents('file.txt');
-    $file = json_decode($file, true);
-    if (array_key_exists($id, $file)) {
-        echo "<div class='alert alert-success' role='alert'>Login sucessfull</div>";
-    } else {
-        echo "<div class='alert alert-danger' role='alert'>Enter correct email and password</div>";
+
+    if (empty($errorMsg)) {
+        $id = md5($_POST['email'] . $_POST['password']); //storing password and email in md5 hasing
+        $file = file_get_contents('file.txt'); //geting the file.txt so that i can check if the data is store in the databse and also pass it to json for identifier
+        $file = json_decode($file, true);
+        if (array_key_exists($id, $file)) { //if the file and id exist
+            header("Location: home.php");
+
+        } else { // if it does not exist
+            $_SESSION['message'] = 'login fail, no such user found';
+        }
     }
 }
 
@@ -53,7 +60,7 @@ function formData($field)
         <form action="" method="post" novalidate>
         <div class="form-group">
                         <label for="">Email</label>
-                        <input type="email" name="email" placeholder="Email" class="form-control <?php echo isset($errorMsg['email']) ? 'is-invalid' : '' ?>">
+                        <input type="email" name="email" placeholder="Email" class="form-control <?php echo isset($errorMsg['email']) ? 'is-invalid' : '' ?>" value="<?php ?>">
                         <small class="invalid-feedback">
                             <?php echo $errorMsg['email'] ?? '' ?>
                         </small>
@@ -68,5 +75,11 @@ function formData($field)
             <button class="btn btn-primary">Login</button> <span>Don't have an account?<a href="registration.php" class="btn btn-outline-secondary"> Register</a></span>
         </form>
     </div>
+    <?php
+if (isset($_SESSION['message'])) {
+    echo $_SESSION['message'];
+}
+unset($_SESSION['message']);
+?>
 </body>
 </html>
